@@ -1,0 +1,6 @@
+
+usb port permission deny:
+https://askubuntu.com/questions/210177/serial-port-terminal-cannot-open-dev-ttys0-permission-denied
+
+auto start python program as boot:
+https://blog.csdn.net/qq_33287871/article/details/99687067

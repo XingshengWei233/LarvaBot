@@ -9,8 +9,16 @@ import numpy as np
 
 #reference: https://github.com/ethanlipson/PyLX-16A
 
+#LED red: Initialization started
+#LED yellow: Initialization done
+#LED green: moved to home position
+#LED light Blue: Executing 
+
+#Initialize
 print('Initializing...')
+
 # initializing LED
+print('Initializing LED...')
 red = 18
 green = 23
 blue = 24
@@ -19,13 +27,22 @@ GPIO.setwarnings(False)
 GPIO.setup(red,GPIO.OUT)
 GPIO.setup(green,GPIO.OUT)
 GPIO.setup(blue,GPIO.OUT)
+#set LED off at beginning
+GPIO.output(red,GPIO.LOW)
+GPIO.output(green,GPIO.LOW)
+GPIO.output(blue,GPIO.LOW)
 # LED show red
 GPIO.output(red,GPIO.HIGH)
-print('Initializing Done')
+print('LED ready')
+
+print('Initializing servo driver...')
 # On Raspbian, try each port in /dev/
 #LX16A.initialize("/dev/ttyUSB0")
 LX16A.initialize("/dev/ttyUSB0")
+print('Servo driver ready')
+
 # Initializing Servo
+print('Initializing servos...')
 #servo10 = LX16A(10)
 #servo11 = LX16A(11)
 #servo12 = LX16A(12)
@@ -35,9 +52,13 @@ LX16A.initialize("/dev/ttyUSB0")
 #servo22 = LX16A(22)
 #servo23 = LX16A(23)
 servo = [LX16A(10),LX16A(11),LX16A(12),LX16A(13),LX16A(20),LX16A(21),LX16A(22),LX16A(23)]
+print('Servos ready')
+
 #initializing parameters
+print('Initializing parameters...')
 nMotor = 8
-#homePos = 
+#homePos = [] 
+homeThresh = 2
 # LED show yellow for 1 sec
 GPIO.output(red,GPIO.HIGH)
 GPIO.output(green,GPIO.HIGH)
@@ -52,7 +73,22 @@ pos = []
 for i in range(0,nMotor):
 	pos.append(servo[i].moveTimeRead())
 print('Initial Position:');print(pos)
-#while
+
+#normalize all servos to start from 0
+
+homingStepCount = 0
+while homed = False:
+	homed = True
+	for i in range(0,nMotor):
+		if (pos[i]-homePos[i]>homeThresh):
+			pos = pos + 1 #change
+			#servo11.moveTimeWrite(pos)
+			homed = False
+	homingStepCount++
+	if homingStepCount > 1000:
+		
+		break
+print('error: unable to home')
 
 
 

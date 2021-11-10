@@ -4,6 +4,11 @@ import time
 import RPi.GPIO as GPIO
 import numpy as np
 
+
+#Created by Xingsheng Wei for driving LarvaBot
+
+#reference: https://github.com/ethanlipson/PyLX-16A
+
 print('Initializing...')
 # initializing LED
 red = 18

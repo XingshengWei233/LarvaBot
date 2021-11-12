@@ -43,22 +43,22 @@ print('Servo driver ready')
 
 # Initializing Servo
 print('Initializing servos...')
-#servo10 = LX16A(10)
-#servo11 = LX16A(11)
-#servo12 = LX16A(12)
-#servo13 = LX16A(13)
-#servo20 = LX16A(20)
-#servo21 = LX16A(21)
-#servo22 = LX16A(22)
-#servo23 = LX16A(23)
 servo = [LX16A(10),LX16A(11),LX16A(12),LX16A(13),LX16A(20),LX16A(21),LX16A(22),LX16A(23)]
 print('Servos ready')
 
 #initializing parameters
 print('Initializing parameters...')
 nMotor = 8
-#homePos = [] 
-homeThresh = 2
+homePos = [1, 240, 0, 120, 0, 240, 0, 130]
+homeThresh = 1
+#servo[0].angleLimitWrite(0,180)
+#servo[1].angleLimitWrite(60,240)
+#servo[2].angleLimitWrite(0,180)
+#servo[3].angleLimitWrite(70,165)
+#servo[4].angleLimitWrite(0,180)
+#servo[5].angleLimitWrite(60,240)
+#servo[6].angleLimitWrite(0,180)
+#servo[7].angleLimitWrite(80,175)
 # LED show yellow for 1 sec
 GPIO.output(red,GPIO.HIGH)
 GPIO.output(green,GPIO.HIGH)
@@ -71,51 +71,57 @@ print('Initializing Done')
 print('Read Initial Position')
 pos = []
 for i in range(0,nMotor):
-	pos.append(servo[i].moveTimeRead())
+    physicalPos = servo[i].getPhysicalPos()
+    if physicalPos >360:
+        physicalPos = 0
+    pos.append(physicalPos)
+    servo[4].moveTimeWrite(0)
 print('Initial Position:');print(pos)
 
-#normalize all servos to start from 0
-
-homingStepCount = 0
-while homed = False:
+homingCount = 0
+homed = False
+while homed == False:
 	homed = True
 	for i in range(0,nMotor):
-		if (pos[i]-homePos[i]>homeThresh):
-			pos = pos + 1 #change
-			#servo11.moveTimeWrite(pos)
+		if (abs(pos[i]-homePos[i])>homeThresh):
+			pos[i] = pos[i] - 0.1*(pos[i]-homePos[i])/abs(pos[i]-homePos[i])
+			servo[i].moveTimeWrite(pos[i])
+			if pos[i] > 360:
+				pos[i]=0
 			homed = False
-	homingStepCount++
-	if homingStepCount > 1000:
-		
+	#print('Current Position:');print(pos)
+	time.sleep(0.01)
+	if homingCount > 1000:
+		print('error: unable to home')
 		break
-print('error: unable to home')
-
-
+	homingCount = homingCount + 1
+print('Homing Done')
+#print('Homed Position:');print(pos)
 
 
 t = 0
-
-#def initialPos():
-#	pos11 = servo11.moveTimeRead()
-
-
-#def limit():
-
+shrink = 90
+nod = 30
+omega = 3
 while True:
-	# Two sine waves out of phase
-	# The servos can rotate between 0 and 240 degrees,
-	# So we adjust the waves to be in that range
-	servo10.moveTimeWrite(0)#0 is loose, 120 is tight
-	pos10=servo10.moveTimeRead()
+	servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+	servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
+	servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+	servo[3].moveTimeWrite(120+nod*sin(omega*t))#120 is rest
+	servo[4].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+	servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
+	servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+	servo[7].moveTimeWrite(130+nod*sin(omega*t))#130 is rest
+	#pos10=servo10.moveTimeRead()
 	#servo11.moveTimeWrite(240) #240 is loose
 	#pos11=servo11.moveTimeRead()
 	#servo12.moveTimeWrite(0) #0 is loose
 	#pos12=servo12.moveTimeRead()
 	#servo13.moveTimeWrite(120) #min 75, max 165, neutral 120,+-45
-	servo20.moveTimeWrite(0)#0 is loose, 120 is tight
-	pos20=servo20.moveTimeRead()
-	print(pos10)
-	print(pos20)
-	print('running')
-	
+	#servo20.moveTimeWrite(0)#0 is loose, 120 is tight
+	#pos20=servo20.moveTimeRead()
+	#print(pos10)
+	#print(pos20)
+	#print('running')
+	time.sleep(0.01)
 	t += 0.01

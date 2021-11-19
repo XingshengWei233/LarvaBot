@@ -20,10 +20,15 @@ print('Initializing servos...')
 #servo23 = LX16A(23)
 servo = [LX16A(10),LX16A(11),LX16A(12),LX16A(13),LX16A(20),LX16A(21),LX16A(22),LX16A(23)]
 print('Servos ready')
-
-for i in range(0,8):
-	servo[i].loadOrUnloadWrite(0)
-print('Servos disabled')
+t=0
+while True:
+	servo[0].moveTimeWrite(90-90*cos(t))
+	pos=servo[0].moveTimeRead()
+	t=t+0.01
+	print(pos)
+#for i in range(0,8):
+#	servo[i].loadOrUnloadWrite(0)
+#print('Servos disabled')
 #while True:
 	# Two sine waves out of phase
 	# The servos can rotate between 0 and 240 degrees,

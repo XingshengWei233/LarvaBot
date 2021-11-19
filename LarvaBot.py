@@ -5,6 +5,7 @@ import time
 import RPi.GPIO as GPIO
 import numpy as np
 import keyboard
+import csv
 
 #Created by Xingsheng Wei for driving LarvaBot
 
@@ -52,32 +53,42 @@ print('Initializing parameters...')
 nMotor = 8
 homePos = [1, 240, 0, 120, 0, 240, 0, 130]
 homeThresh = 1
-#servo[0].angleLimitWrite(0,180)
-#servo[1].angleLimitWrite(60,240)
-#servo[2].angleLimitWrite(0,180)
-#servo[3].angleLimitWrite(70,165)
-#servo[4].angleLimitWrite(0,180)
-#servo[5].angleLimitWrite(60,240)
-#servo[6].angleLimitWrite(0,180)
-#servo[7].angleLimitWrite(80,175)
+print('Parameters ready')
+
+#initializing file writer
+print('Initializing file writing stream...')
+data = open('LarvaBot/ForwardPosData.csv', 'w', newline='')
+writer = csv.writer(data)
+print('File writing stream ready')
+
 # LED show yellow for 1 sec
 GPIO.output(red,GPIO.HIGH)
 GPIO.output(green,GPIO.HIGH)
 print('Initializing Done')
 #initializing done
 
-#Auto Checking 
-
-#Auto Homing
-def autoHome():
-	print('Read Initial Position')
+def readPos():
 	pos = []
 	for i in range(0,nMotor):
 		physicalPos = servo[i].getPhysicalPos()
 		if physicalPos >360:
 			physicalPos = 0
 		pos.append(physicalPos)
-		servo[4].moveTimeWrite(0)
+	return pos
+
+def readCommandedPos():
+	pos = []
+	for i in range(0,nMotor):
+		physicalPos = servo[i].moveTimeRead()
+		if physicalPos >360:
+			physicalPos = 0
+		pos.append(physicalPos)
+	return pos
+
+#Auto Homing
+def autoHome():
+	print('Read Initial Position')
+	pos = readPos()
 	print('Initial Position:');print(pos)
 
 	homingCount = 0
@@ -111,6 +122,7 @@ def goForward():
 	t = 0
 	while True:
 		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		pos=servo[0].moveTimeRead()
 		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[3].moveTimeWrite(120-nod*sin(omega*t))#120 is rest
@@ -118,9 +130,10 @@ def goForward():
 		servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[7].moveTimeWrite(130-nod*sin(omega*t))#130 is rest
-		print("going forward")
-		exit()
-		time.sleep(0.01)
+		
+		print(pos) #print works
+		#writer.writerow(pos) #this not working
+		time.sleep(0.01) 
 		t += 0.01 #0.01
 
 def goBackward():
@@ -183,7 +196,11 @@ def turnRight():
 		time.sleep(0.01)
 		t += 0.01 #0.01
 
+def rest():
+	autoHome()
+	exit()
 
+	
 #dance()
 goForward()
 #goBackward()

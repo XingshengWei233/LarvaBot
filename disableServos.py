@@ -17,6 +17,7 @@ nMotor = 8
 homeThresh = 1
 
 #Auto Homing
+
 print('Read Initial Position')
 pos = []
 for i in range(0,nMotor):
@@ -26,6 +27,7 @@ for i in range(0,nMotor):
     pos.append(physicalPos)
     servo[4].moveTimeWrite(0)
 print('Initial Position:');print(pos)
+
 
 homingCount = 0
 homed = False

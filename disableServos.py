@@ -50,6 +50,7 @@ print('Homing Done')
 for i in range(0,8):
 	servo[i].loadOrUnloadWrite(0)
 print('Servos disabled')
+#servo[0].angleLimitWrite(0,180)
 
 while True:
     pos = []

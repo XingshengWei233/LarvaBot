@@ -1,9 +1,10 @@
 from lx16a import *
-from math import sin, cos
+from math import sin, cos, pi
+import math
 import time
 import RPi.GPIO as GPIO
 import numpy as np
-
+import keyboard
 
 #Created by Xingsheng Wei for driving LarvaBot
 
@@ -68,60 +69,123 @@ print('Initializing Done')
 #Auto Checking 
 
 #Auto Homing
-print('Read Initial Position')
-pos = []
-for i in range(0,nMotor):
-    physicalPos = servo[i].getPhysicalPos()
-    if physicalPos >360:
-        physicalPos = 0
-    pos.append(physicalPos)
-    servo[4].moveTimeWrite(0)
-print('Initial Position:');print(pos)
-
-homingCount = 0
-homed = False
-while homed == False:
-	homed = True
+def autoHome():
+	print('Read Initial Position')
+	pos = []
 	for i in range(0,nMotor):
-		if (abs(pos[i]-homePos[i])>homeThresh):
-			pos[i] = pos[i] - 0.1*(pos[i]-homePos[i])/abs(pos[i]-homePos[i])
-			servo[i].moveTimeWrite(pos[i])
-			if pos[i] > 360:
-				pos[i]=0
-			homed = False
-	#print('Current Position:');print(pos)
-	time.sleep(0.01)
-	if homingCount > 1000:
-		print('error: unable to home')
-		break
-	homingCount = homingCount + 1
-print('Homing Done')
-#print('Homed Position:');print(pos)
+		physicalPos = servo[i].getPhysicalPos()
+		if physicalPos >360:
+			physicalPos = 0
+		pos.append(physicalPos)
+		servo[4].moveTimeWrite(0)
+	print('Initial Position:');print(pos)
 
+	homingCount = 0
+	homed = False
+	while homed == False:
+		homed = True
+		for i in range(0,nMotor):
+			if (abs(pos[i]-homePos[i])>homeThresh):
+				pos[i] = pos[i] - 0.2*(pos[i]-homePos[i])/abs(pos[i]-homePos[i])
+				servo[i].moveTimeWrite(pos[i])
+				if pos[i] > 360:
+					pos[i]=0
+				homed = False
+		#print('Current Position:');print(pos)
+		time.sleep(0.01)
+		if homingCount > 1000:
+			print('error: unable to home')
+			break
+		homingCount = homingCount + 1
+	print('Homing Done')
+	#print('Homed Position:');print(pos)
+
+autoHome()
 
 t = 0
 shrink = 90
 nod = 30
 omega = 3
-while True:
-	servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
-	servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
-	servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
-	servo[3].moveTimeWrite(120+nod*sin(omega*t))#120 is rest
-	servo[4].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
-	servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
-	servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
-	servo[7].moveTimeWrite(130+nod*sin(omega*t))#130 is rest
-	#pos10=servo10.moveTimeRead()
-	#servo11.moveTimeWrite(240) #240 is loose
-	#pos11=servo11.moveTimeRead()
-	#servo12.moveTimeWrite(0) #0 is loose
-	#pos12=servo12.moveTimeRead()
-	#servo13.moveTimeWrite(120) #min 75, max 165, neutral 120,+-45
-	#servo20.moveTimeWrite(0)#0 is loose, 120 is tight
-	#pos20=servo20.moveTimeRead()
-	#print(pos10)
-	#print(pos20)
-	#print('running')
-	time.sleep(0.01)
-	t += 0.01
+
+def goForward():
+	t = 0
+	while True:
+		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
+		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[3].moveTimeWrite(120-nod*sin(omega*t))#120 is rest
+		servo[4].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
+		servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[7].moveTimeWrite(130-nod*sin(omega*t))#130 is rest
+		print("going forward")
+		exit()
+		time.sleep(0.01)
+		t += 0.01 #0.01
+
+def goBackward():
+	t = 0
+	while True:
+		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
+		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[3].moveTimeWrite(120+nod*sin(omega*t))#120 is rest
+		servo[4].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
+		servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[7].moveTimeWrite(130+nod*sin(omega*t))#130 is rest
+		
+		time.sleep(0.01)
+		t += 0.01 #0.01
+
+def dance():
+	t = 0
+	upHead = 0
+	while True:
+		upHead = upHead+0.5
+		servo[0].moveTimeWrite(upHead)#0 is loose
+		if t>math.pi/omega:
+			servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t+math.pi)))#240 is loose
+		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[3].moveTimeWrite(120-0.3*nod*sin(2*omega*t))#120 is rest
+		if upHead>=170:
+			upHead = 170
+		time.sleep(0.01)
+		t += 0.01 #0.01
+
+def turnLeft():
+	t = 0
+	while True:
+		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
+		#servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[3].moveTimeWrite(120-nod*sin(omega*t))#120 is rest
+		servo[4].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		#servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
+		servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[7].moveTimeWrite(130-nod*sin(omega*t))#130 is rest
+		
+		time.sleep(0.01)
+		t += 0.01 #0.01
+
+def turnRight():
+	t = 0
+	while True:
+		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		#servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
+		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[3].moveTimeWrite(120-nod*sin(omega*t))#120 is rest
+		servo[4].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
+		#servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[7].moveTimeWrite(130-nod*sin(omega*t))#130 is rest
+		
+		time.sleep(0.01)
+		t += 0.01 #0.01
+
+
+#dance()
+goForward()
+#goBackward()
+#turnLeft()
+#turnRight()

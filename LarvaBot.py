@@ -4,19 +4,16 @@ import math
 import time
 import RPi.GPIO as GPIO
 import numpy as np
-import keyboard
-import csv
-from pynput.keyboard import Key, Listener
 
 
 #Created by Xingsheng Wei for driving LarvaBot
+#https://github.com/XingshengWei233/LarvaBot.git
 
-#reference: https://github.com/ethanlipson/PyLX-16A
+#PyLX16-A library reference: https://github.com/ethanlipson/PyLX-16A
 
 #LED red: Initialization started
 #LED yellow: Initialization done
-#LED green: moved to home position
-#LED light Blue: Executing 
+#LED light Blue: Homing
 
 #Initialize
 print('Initializing...')
@@ -56,12 +53,6 @@ nMotor = 8
 homePos = [1, 240, 0, 120, 0, 240, 0, 130]
 homeThresh = 1
 print('Parameters ready')
-
-#initializing file writer
-print('Initializing file writing stream...')
-data = open('LarvaBot/ForwardPosData.csv', 'w', newline='')
-writer = csv.writer(data)
-print('File writing stream ready')
 
 # LED show yellow for 1 sec
 GPIO.output(red,GPIO.HIGH)
@@ -120,11 +111,11 @@ def autoHome():
 	print('Homing Done')
 	#print('Homed Position:');print(pos)
 
-t = 0
 shrink = 90
 nod = 30
 omega = 3
 stepLen = 0.01
+
 def goForward(duration):
 	t = 0
 	while t<duration:
@@ -139,7 +130,6 @@ def goForward(duration):
 		time.sleep(stepLen)  #0.01
 		t += stepLen #0.01
 		
-
 def goBackward(duration):
 	t = 0
 	while t<duration:
@@ -151,7 +141,6 @@ def goBackward(duration):
 		servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[7].moveTimeWrite(130+nod*sin(omega*t))#130 is rest
-		
 		time.sleep(stepLen)
 		t += stepLen #0.01
 
@@ -175,13 +164,10 @@ def turnLeft(duration):
 	while t<duration:
 		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
-		#servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[3].moveTimeWrite(120-nod*sin(omega*t))#120 is rest
 		servo[4].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
-		#servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[7].moveTimeWrite(130-nod*sin(omega*t))#130 is rest
-		
 		time.sleep(stepLen)
 		t += stepLen #0.01
 
@@ -189,14 +175,11 @@ def turnRight(duration):
 	t = 0
 	while t<duration:
 		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
-		#servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[3].moveTimeWrite(120-nod*sin(omega*t))#120 is rest
 		servo[4].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
-		#servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[7].moveTimeWrite(130-nod*sin(omega*t))#130 is rest
-		
 		time.sleep(stepLen)
 		t += stepLen #0.01
 
@@ -205,12 +188,6 @@ def rest():
 	print('Exited')
 	exit()
 
-	
-#dance()
-#goForward()
-#goBackward()
-#turnLeft()
-#turnRight()
 while True:
 	autoHome()
 	print('Enter motion (goForward,goBackward,turnLeft,turnRight,dance,rest):')
@@ -223,7 +200,6 @@ while True:
 		
 	print('Enter duration (interger):')
 	duration = 'aString'
-	#print(duration.isnumeric())
 	while duration.isnumeric() == False:
 		duration = input()
 		if duration.isnumeric() == False:

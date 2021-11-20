@@ -6,6 +6,8 @@ import RPi.GPIO as GPIO
 import numpy as np
 import keyboard
 import csv
+from pynput.keyboard import Key, Listener
+
 
 #Created by Xingsheng Wei for driving LarvaBot
 
@@ -87,9 +89,13 @@ def readCommandedPos():
 
 #Auto Homing
 def autoHome():
-	print('Read Initial Position')
+	print('Read Position')
 	pos = readPos()
-	print('Initial Position:');print(pos)
+	print('Position before homing:');print(pos)
+
+	GPIO.output(red,GPIO.LOW)
+	GPIO.output(green,GPIO.HIGH)
+	GPIO.output(blue,GPIO.HIGH)
 
 	homingCount = 0
 	homed = False
@@ -97,7 +103,7 @@ def autoHome():
 		homed = True
 		for i in range(0,nMotor):
 			if (abs(pos[i]-homePos[i])>homeThresh):
-				pos[i] = pos[i] - 0.2*(pos[i]-homePos[i])/abs(pos[i]-homePos[i])
+				pos[i] = pos[i] - 0.5*(pos[i]-homePos[i])/abs(pos[i]-homePos[i])
 				servo[i].moveTimeWrite(pos[i])
 				if pos[i] > 360:
 					pos[i]=0
@@ -108,21 +114,21 @@ def autoHome():
 			print('error: unable to home')
 			break
 		homingCount = homingCount + 1
+	GPIO.output(red,GPIO.HIGH)
+	GPIO.output(green,GPIO.HIGH)
+	GPIO.output(blue,GPIO.LOW)
 	print('Homing Done')
 	#print('Homed Position:');print(pos)
-
-autoHome()
 
 t = 0
 shrink = 90
 nod = 30
 omega = 3
-
-def goForward():
+stepLen = 0.01
+def goForward(duration):
 	t = 0
-	while True:
+	while t<duration:
 		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
-		pos=servo[0].moveTimeRead()
 		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[3].moveTimeWrite(120-nod*sin(omega*t))#120 is rest
@@ -130,15 +136,13 @@ def goForward():
 		servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[7].moveTimeWrite(130-nod*sin(omega*t))#130 is rest
+		time.sleep(stepLen)  #0.01
+		t += stepLen #0.01
 		
-		print(pos) #print works
-		#writer.writerow(pos) #this not working
-		time.sleep(0.01) 
-		t += 0.01 #0.01
 
-def goBackward():
+def goBackward(duration):
 	t = 0
-	while True:
+	while t<duration:
 		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
@@ -148,13 +152,13 @@ def goBackward():
 		servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[7].moveTimeWrite(130+nod*sin(omega*t))#130 is rest
 		
-		time.sleep(0.01)
-		t += 0.01 #0.01
+		time.sleep(stepLen)
+		t += stepLen #0.01
 
-def dance():
+def dance(duration):
 	t = 0
 	upHead = 0
-	while True:
+	while t<duration:
 		upHead = upHead+0.5
 		servo[0].moveTimeWrite(upHead)#0 is loose
 		if t>math.pi/omega:
@@ -163,12 +167,12 @@ def dance():
 		servo[3].moveTimeWrite(120-0.3*nod*sin(2*omega*t))#120 is rest
 		if upHead>=170:
 			upHead = 170
-		time.sleep(0.01)
-		t += 0.01 #0.01
+		time.sleep(stepLen)
+		t += stepLen #0.01
 
-def turnLeft():
+def turnLeft(duration):
 	t = 0
-	while True:
+	while t<duration:
 		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		#servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
@@ -178,12 +182,12 @@ def turnLeft():
 		servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[7].moveTimeWrite(130-nod*sin(omega*t))#130 is rest
 		
-		time.sleep(0.01)
-		t += 0.01 #0.01
+		time.sleep(stepLen)
+		t += stepLen #0.01
 
-def turnRight():
+def turnRight(duration):
 	t = 0
-	while True:
+	while t<duration:
 		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		#servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
@@ -193,16 +197,46 @@ def turnRight():
 		#servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[7].moveTimeWrite(130-nod*sin(omega*t))#130 is rest
 		
-		time.sleep(0.01)
-		t += 0.01 #0.01
+		time.sleep(stepLen)
+		t += stepLen #0.01
 
 def rest():
 	autoHome()
+	print('Exited')
 	exit()
 
 	
 #dance()
-goForward()
+#goForward()
 #goBackward()
 #turnLeft()
 #turnRight()
+while True:
+	autoHome()
+	print('Enter motion (goForward,goBackward,turnLeft,turnRight,dance,rest):')
+	motion = input()
+	while motion!='goForward' and motion!='goBackward' and motion!='turnLeft' and motion!='turnRight' and motion!='dance' and motion!='rest':
+		print('Not valid motion, try again:')
+		motion = input()
+	if motion == 'rest':
+		rest()
+		
+	print('Enter duration (interger):')
+	duration = 'aString'
+	#print(duration.isnumeric())
+	while duration.isnumeric() == False:
+		duration = input()
+		if duration.isnumeric() == False:
+			print('Not a number, try again:')
+	duration = int(duration)
+
+	if motion == 'goForward':
+		goForward(duration)
+	if motion == 'goBackward':
+		goBackward(duration)
+	if motion == 'turnLeft':
+		turnLeft(duration)
+	if motion == 'turnRight':
+		turnRight(duration)
+	if motion == 'dance':
+		dance(duration)

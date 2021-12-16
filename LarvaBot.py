@@ -11,9 +11,12 @@ import numpy as np
 
 #PyLX16-A library reference: https://github.com/ethanlipson/PyLX-16A
 
-#LED red: Initialization started
-#LED yellow: Initialization done
+#LED red: can't initialize servo
+#LED yellow: waiting to move
+#LED green: moving
+#LED discoing: dancing
 #LED light Blue: Homing
+#LED red only 1 sec: turning off
 
 #Initialize
 print('Initializing...')
@@ -45,12 +48,13 @@ print('Servo driver ready')
 # Initializing Servo
 print('Initializing servos...')
 servo = [LX16A(10),LX16A(11),LX16A(12),LX16A(13),LX16A(20),LX16A(21),LX16A(22),LX16A(23)]
+#servo[3].angleLimitWrite(0,240)
 print('Servos ready')
 
 #initializing parameters
 print('Initializing parameters...')
 nMotor = 8
-homePos = [1, 240, 0, 120, 0, 240, 0, 130]
+homePos = [0, 220, 0, 120, 0, 240, 0, 130]
 homeThresh = 1
 print('Parameters ready')
 
@@ -112,13 +116,17 @@ def autoHome():
 	#print('Homed Position:');print(pos)
 
 shrink = 90
-nod = 30
-omega = 3
+nod = 40 #30
+omega = 5 #5
 stepLen = 0.01
 
 def goForward(duration):
 	t = 0
 	while t<duration:
+		GPIO.output(red,GPIO.LOW)
+		GPIO.output(green,GPIO.HIGH)
+		GPIO.output(blue,GPIO.LOW)
+
 		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
@@ -129,10 +137,32 @@ def goForward(duration):
 		servo[7].moveTimeWrite(130-nod*sin(omega*t))#130 is rest
 		time.sleep(stepLen)  #0.01
 		t += stepLen #0.01
+
+def goForward2(duration):
+	t = 0
+	while t<duration:
+		GPIO.output(red,GPIO.LOW)
+		GPIO.output(green,GPIO.HIGH)
+		GPIO.output(blue,GPIO.LOW)
+
+		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
+		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[3].moveTimeWrite(120-nod*sin(omega*t))#120 is rest
+		servo[4].moveTimeWrite(shrink-shrink*cos(omega*t+pi))#0 is loose
+		servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t+pi)))#240 is loose
+		servo[6].moveTimeWrite(shrink-shrink*cos(omega*t+pi))#0 is loose
+		servo[7].moveTimeWrite(130+nod*sin(omega*t))#130 is rest
+		time.sleep(stepLen)  #0.01
+		t += stepLen #0.01
 		
 def goBackward(duration):
 	t = 0
 	while t<duration:
+		GPIO.output(red,GPIO.LOW)
+		GPIO.output(green,GPIO.HIGH)
+		GPIO.output(blue,GPIO.LOW)
+
 		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
@@ -145,27 +175,89 @@ def goBackward(duration):
 		t += stepLen #0.01
 
 def dance(duration):
+	
 	t = 0
-	upHead = 0
+	upHead = 180
+	upTime = 2
+	t2 = t-upTime
 	while t<duration:
-		upHead = upHead+0.5
-		servo[0].moveTimeWrite(upHead)#0 is loose
-		if t>math.pi/omega:
-			servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t+math.pi)))#240 is loose
-		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
-		servo[3].moveTimeWrite(120-0.3*nod*sin(2*omega*t))#120 is rest
-		if upHead>=170:
-			upHead = 170
+		if int(t*10)%3 == 0:
+			GPIO.output(red,GPIO.HIGH)
+			GPIO.output(green,GPIO.HIGH)
+			GPIO.output(blue,GPIO.LOW)
+		if int(t*10)%3 == 1:
+			GPIO.output(red,GPIO.HIGH)
+			GPIO.output(green,GPIO.LOW)
+			GPIO.output(blue,GPIO.HIGH)
+		if int(t*10)%3 == 2:
+			GPIO.output(red,GPIO.LOW)
+			GPIO.output(green,GPIO.HIGH)
+			GPIO.output(blue,GPIO.HIGH)
+		if t<upTime:
+			print(t)
+			servo[0].moveTimeWrite(upHead/2-upHead/2*cos(pi/upTime*t))#0 is loose
+		if t>upTime:
+			if t2>math.pi/omega:
+				servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega/2*t2+math.pi)))#240 is loose
+			servo[2].moveTimeWrite(shrink-shrink*cos(omega/2*t2))#0 is loose
+			servo[3].moveTimeWrite(120-1*nod*sin(omega*t2))#120 is rest
+		
 		time.sleep(stepLen)
 		t += stepLen #0.01
+		t2 += stepLen #0.01
+
+def dance2(duration):
+	t = 0
+	while t<duration:
+		GPIO.output(red,GPIO.LOW)
+		GPIO.output(green,GPIO.HIGH)
+		GPIO.output(blue,GPIO.LOW)
+
+		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[3].moveTimeWrite(120-20+20*cos(omega*t))#120 is rest
+		time.sleep(stepLen)
+		t += stepLen #0.01
+
+def dance3(duration):
+	t = 0
+	while t<duration:
+		if int(t*10)%3 == 0:
+			GPIO.output(red,GPIO.HIGH)
+			GPIO.output(green,GPIO.HIGH)
+			GPIO.output(blue,GPIO.LOW)
+		if int(t*10)%3 == 1:
+			GPIO.output(red,GPIO.HIGH)
+			GPIO.output(green,GPIO.LOW)
+			GPIO.output(blue,GPIO.HIGH)
+		if int(t*10)%3 == 2:
+			GPIO.output(red,GPIO.LOW)
+			GPIO.output(green,GPIO.HIGH)
+			GPIO.output(blue,GPIO.HIGH)
+		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
+		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[3].moveTimeWrite(120-10)#120 is rest
+		if t>math.pi/omega:
+			servo[4].moveTimeWrite(shrink-shrink*cos(omega*t+pi))#0 is loose
+			servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t+pi)))#240 is loose
+			servo[6].moveTimeWrite(shrink-shrink*cos(omega*t+pi))#0 is loose
+			servo[7].moveTimeWrite(130+10)#130 is rest
+		
+		time.sleep(stepLen)
+		t += stepLen #0.01
+		
 
 def turnLeft(duration):
 	t = 0
 	while t<duration:
-		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		GPIO.output(red,GPIO.LOW)
+		GPIO.output(green,GPIO.HIGH)
+		GPIO.output(blue,GPIO.LOW)
+
+		servo[0].moveTimeWrite((shrink-shrink*cos(omega*t))/2)#0 is loose
 		servo[1].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[3].moveTimeWrite(120-nod*sin(omega*t))#120 is rest
-		servo[4].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[4].moveTimeWrite((shrink-shrink*cos(omega*t))/2)#0 is loose
 		servo[6].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[7].moveTimeWrite(130-nod*sin(omega*t))#130 is rest
 		time.sleep(stepLen)
@@ -174,10 +266,14 @@ def turnLeft(duration):
 def turnRight(duration):
 	t = 0
 	while t<duration:
-		servo[0].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		GPIO.output(red,GPIO.LOW)
+		GPIO.output(green,GPIO.HIGH)
+		GPIO.output(blue,GPIO.LOW)
+
+		servo[0].moveTimeWrite((shrink-shrink*cos(omega*t))/2)#0 is loose
 		servo[2].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
 		servo[3].moveTimeWrite(120-nod*sin(omega*t))#120 is rest
-		servo[4].moveTimeWrite(shrink-shrink*cos(omega*t))#0 is loose
+		servo[4].moveTimeWrite((shrink-shrink*cos(omega*t))/2)#0 is loose
 		servo[5].moveTimeWrite(240-(shrink-shrink*cos(omega*t)))#240 is loose
 		servo[7].moveTimeWrite(130-nod*sin(omega*t))#130 is rest
 		time.sleep(stepLen)
@@ -185,14 +281,23 @@ def turnRight(duration):
 
 def rest():
 	autoHome()
+	GPIO.output(red,GPIO.HIGH)
+	GPIO.output(green,GPIO.LOW)
+	GPIO.output(blue,GPIO.LOW)
+	time.sleep(0.25)
+	GPIO.output(red,GPIO.LOW)
+	
 	print('Exited')
 	exit()
 
 while True:
 	autoHome()
+	#goForward(10)
+	rest()
+	'''
 	print('Enter motion (goForward,goBackward,turnLeft,turnRight,dance,rest):')
 	motion = input()
-	while motion!='goForward' and motion!='goBackward' and motion!='turnLeft' and motion!='turnRight' and motion!='dance' and motion!='rest':
+	while motion!='goForward' and motion!='goForward2' and motion!='goBackward' and motion!='turnLeft' and motion!='turnRight' and motion!='dance' and motion!='rest':
 		print('Not valid motion, try again:')
 		motion = input()
 	if motion == 'rest':
@@ -208,6 +313,8 @@ while True:
 
 	if motion == 'goForward':
 		goForward(duration)
+	if motion == 'goForward2':
+		goForward2(duration)
 	if motion == 'goBackward':
 		goBackward(duration)
 	if motion == 'turnLeft':
@@ -216,3 +323,4 @@ while True:
 		turnRight(duration)
 	if motion == 'dance':
 		dance(duration)
+		'''

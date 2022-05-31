@@ -1,0 +1,8 @@
+prefix=/home/xingshengwei/larvabot_ros/catkin_ws/devel
+
+Name: larvabot_description
+Description: Description of larvabot_description
+Version: 1.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

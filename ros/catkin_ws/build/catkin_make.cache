@@ -1,0 +1,2 @@
+larvabot_description:larvabot_gazebo
+-DCATKIN_DEVEL_PREFIX=/home/xingshengwei/larvabot_ros/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/xingshengwei/larvabot_ros/catkin_ws/install -G Unix Makefiles

@@ -1,0 +1,8 @@
+prefix=/home/xingshengwei/larvabot_ros/catkin_ws/devel
+
+Name: LarvaBotSim
+Description: Description of LarvaBotSim
+Version: 1.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

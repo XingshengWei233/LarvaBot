@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/xingshengwei/larvabot_ros/catkin_ws/install/setup.sh

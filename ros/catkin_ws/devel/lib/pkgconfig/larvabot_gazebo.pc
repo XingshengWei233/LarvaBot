@@ -1,0 +1,8 @@
+prefix=/home/xingshengwei/larvabot_ros/catkin_ws/devel
+
+Name: larvabot_gazebo
+Description: Description of larvabot_gazebo
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
